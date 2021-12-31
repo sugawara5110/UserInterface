@@ -7,7 +7,7 @@
 #ifndef Class_UserInterface_Header
 #define Class_UserInterface_Header
 
-#include "../Common/Direct3DWrapper/DxText.h"
+#include "../Common/Direct3DWrapperOption/DxText.h"
 
 class UserInterfaceMeter {
 
