@@ -41,8 +41,8 @@ namespace {
 			HeaderString[len] = '\0';
 			me[0].GetVBarray2D(1);
 			me[1].GetVBarray2D(1);
-			me[0].CreateBox(0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
-			me[1].CreateBox(0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
+			me[0].CreateBox(0, 0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
+			me[1].CreateBox(0, 0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
 		}
 		bool checkRange() {
 			DxInput* di = DxInput::GetInstance();
@@ -116,11 +116,9 @@ namespace {
 
 			return updatePos(px, py, depth, Mov);
 		}
-		void Draw(int com) {
-			me[0].SetCommandList(com);
-			me[1].SetCommandList(com);
-			me[0].Draw();
-			me[1].Draw();
+		void Draw(int comIndex) {
+			me[0].Draw(comIndex);
+			me[1].Draw(comIndex);
 		}
 	};
 
@@ -145,7 +143,7 @@ namespace {
 		void create(int fontsize) {
 			fontSize = fontsize;
 			win[0].GetVBarray2D(1);
-			win[0].CreateBox(0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
+			win[0].CreateBox(0, 0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
 		}
 		void setMenuName(int numMenu, char** MenuArr) {
 			int maxCntX = 0;
@@ -190,9 +188,8 @@ namespace {
 					UpDateText(MenuString[i], (float)x, (float)y + i * fontSize, (float)fontSize, { 0.0f, 0.0f, 1.0f, 1.0f });
 			return returnPos;
 		}
-		void Draw(int com) {
-			win[0].SetCommandList(com);
-			win[0].Draw();
+		void Draw(int comIndex) {
+			win[0].Draw(comIndex);
 		}
 	};
 
