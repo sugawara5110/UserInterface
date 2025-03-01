@@ -10,6 +10,39 @@
 
 namespace {
 
+	VERTEX2 v2[] =
+	{
+		{ {-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f} ,{0.0f,1.0f}},
+		{ {0.5f, -0.5f, 0.0f},  {0.0f, 0.0f, 0.0f, 0.0f} ,{1.0f,1.0f}},
+		{ {0.5f, 0.5f, 0.0f},   {0.0f, 0.0f, 0.0f, 0.0f} ,{1.0f,0.0f}},
+		{ {-0.5f, 0.5f, 0.0f},  {0.0f, 0.0f, 0.0f, 0.0f} ,{0.0f,0.0f}}
+	};
+
+	UINT index[] =
+	{
+		0,2,1,
+		0,3,2
+	};
+
+	void sizeChange(float& posX, float& posY, float& sizeX, float& sizeY) {
+
+		auto sw = Dx_SwapChain::GetInstance();
+		auto w = sw->getClientWidth();
+		auto h = sw->getClientHeight();
+		float x = posX;
+		float y = posY;
+		float sx = sizeX;
+		float sy = sizeY;
+		//¶ -1, ‰º -1
+		float magX = 2.0f / w;
+		float magY = 2.0f / h;
+
+		posX = x * magX - 1.0f;
+		posY = (y * magY - 1.0f) * -1.0f;
+		sizeX = sx * magX;
+		sizeY = sy * magY;
+	}
+
 	class Meter {
 
 	public:
@@ -39,10 +72,10 @@ namespace {
 			if (len > STR_MAX_LENGTH - 1)len = STR_MAX_LENGTH - 1;
 			mbstowcs(HeaderString, headerString, sizeof(TCHAR) * len);
 			HeaderString[len] = '\0';
-			me[0].GetVBarray2D(1);
-			me[1].GetVBarray2D(1);
-			me[0].CreateBox(0, 0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
-			me[1].CreateBox(0, 0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
+			me[0].GetVBarray2D(256);
+			me[1].GetVBarray2D(256);
+			me[0].Create(0, true, true, -1, v2, 4, index, 6);
+			me[1].Create(0, true, true, -1, v2, 4, index, 6);
 		}
 		bool checkRange() {
 			DxInput* di = DxInput::GetInstance();
@@ -65,21 +98,37 @@ namespace {
 		float updatePos(int posX, int posY, float depth, int meterMov) {
 			px = posX;
 			py = posY;
+			float meshX = (float)px + wid * 0.5f;
+			float meshY = (float)py + hei * 0.5f;
+			float strX = (float)px + wid * 0.5f;
+			float strY = (float)py + hei * 0.25f;
 			int mwidMax = wid - 4;
 			meterWid += meterMov;
 			if (meterWid < 0)meterWid = 0;
 			if (meterWid > mwidMax)meterWid = mwidMax;
 			Ratio = (float)meterWid / (float)mwidMax;
 			DxText::GetInstance()->
-				UpDateText(HeaderString, (float)px + 1.0f, (float)py + 1.0f, (float)hei * 0.3f, { 1.0f, 1.0f, 1.0f, 1.0f });
+				UpDateText(HeaderString, strX, strY, (float)hei * 0.3f, { 1.0f, 1.0f, 1.0f, 1.0f });
 			DxText::GetInstance()->
-				UpDateValue((int)(Ratio * 100.0f), (float)px + 1.0f, (float)py + 1.0f + hei * 0.5f, (float)hei * 0.3f,
+				UpDateValue((int)(Ratio * 100.0f), strX, strY + hei * 0.5f, (float)hei * 0.3f,
 					3, { 1.0f, 1.0f, 1.0f, 1.0f });
 
-			me[0].Update((float)px, (float)py, depth + 0.02f,
-				0.0f, 0.3f, 1.0f, 1.0f, (float)wid, (float)hei);
-			me[1].Update((float)px + 2.0f, (float)py + hei * 0.5f, depth + 0.01f,
-				1.0f, 0.0f, 0.0f, 1.0f, (float)meterWid, hei * 0.5f - 2.0f);
+			float ppx = meshX;
+			float ppy = meshY;
+			float wwid = (float)wid;
+			float hhei = (float)hei;
+			sizeChange(ppx, ppy, wwid, hhei);
+
+			float ppx1 = meshX + (float)meterWid * 0.5f - wid * 0.5f + 2.0f;
+			float ppy1 = meshY + hei * 0.25f;
+			float wwid1 = (float)meterWid;
+			float hhei1 = hei * 0.5f - 2.0f;
+			sizeChange(ppx1, ppy1, wwid1, hhei1);
+
+			me[0].Update({ ppx, ppy, depth + 0.02f }, 0,
+				{ wwid, hhei }, { 0.0f, 0.3f, 1.0f, 1.0f });
+			me[1].Update({ ppx1, ppy1, depth + 0.01f }, 0,
+				{ wwid1, hhei1 }, { 1.0f, 0.0f, 0.0f, 1.0f });
 
 			return Ratio;
 		}
@@ -142,8 +191,8 @@ namespace {
 		}
 		void create(int fontsize) {
 			fontSize = fontsize;
-			win[0].GetVBarray2D(1);
-			win[0].CreateBox(0, 0.0f, 0.0f, 0.0f, 0.1f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, true, true);
+			win[0].GetVBarray2D(256);
+			win[0].Create(0, true, true, -1, v2, 4, index, 6);
 		}
 		void setMenuName(int numMenu, char** MenuArr) {
 			int maxCntX = 0;
@@ -177,15 +226,25 @@ namespace {
 				returnPos = numChoice;
 				break;
 			}
-			win[0].Update((float)x, (float)y, 0.02f,
-				0.5f, 0.5f, 0.5f, 0.6f, (float)wid, (float)hei);
+
+			float ppx = (float)x + wid * 0.5f;
+			float ppy = (float)y + hei * 0.5f;
+			float wwid = (float)wid;
+			float hhei = (float)hei;
+			sizeChange(ppx, ppy, wwid, hhei);
+
+			float strX = (float)x + wid * 0.5f;
+			float strY = (float)y + fontSize * 0.5f;
+
+			win[0].Update({ ppx, ppy, 0.02f }, 0,
+				{ wwid, hhei }, { 0.5f, 0.5f, 0.5f, 0.6f });
 			for (int i = 0; i < numChoice; i++)
 				if (i == ChoicePos)
 					DxText::GetInstance()->
-					UpDateText(MenuString[i], (float)x, (float)y + i * fontSize, (float)fontSize, { 1.0f, 1.0f, 1.0f, 1.0f });
+					UpDateText(MenuString[i], strX, strY + i * fontSize, (float)fontSize, { 1.0f, 1.0f, 1.0f, 1.0f });
 				else
 					DxText::GetInstance()->
-					UpDateText(MenuString[i], (float)x, (float)y + i * fontSize, (float)fontSize, { 0.0f, 0.0f, 1.0f, 1.0f });
+					UpDateText(MenuString[i], strX, strY + i * fontSize, (float)fontSize, { 0.0f, 0.0f, 1.0f, 1.0f });
 			return returnPos;
 		}
 		void Draw(int comIndex) {
